@@ -22,7 +22,6 @@ _rboxCallback = None
 
 # callback function, call by record box dll.
 def rboxCallback(uboxHnd, eventID, param1, param2, param3, param4):
-    logger.debug('rboxCallback called')
     if rbox:
         rbox.handleEvent(uboxHnd, eventID, param1, param2, param3, param4)
 
@@ -64,7 +63,6 @@ class PyRecordBox(object):
         logger.info('PyRecordBox is running...')
         
         rbox = self
-        print rbox
 
         self.rbox = RecordBox()
         _rboxCallback = self.rbox.makeCallback(rboxCallback)
@@ -83,51 +81,52 @@ class PyRecordBox(object):
 
     def handleEvent(self, uboxHnd, eventID, param1, param2, param3, param4):
         if eventID == 1:
-            print '设备插入 id:', eventID
-            logger.info("设备插入，id: %d" %eventID)
+            print u'璁惧鎻掑叆 id:', eventID
+            logger.info(u"璁惧鎻掑叆 id: %d" %eventID)
         elif eventID == 2:
-            print '设备拨出 id:', eventID
-            logger.info("设备拨出，id: %d" %eventID)
+            print u'璁惧鎷ㄥ嚭 id:', eventID
+            logger.info(u"璁惧鎷ㄥ嚭 id: %d" %eventID)
         elif eventID == 3:
-            print '设备报警 id:', eventID
-            logger.info("设备报警，id: %d" %eventID)
+            print u'璁惧鎶ヨ id:', eventID
+            logger.info(u"璁惧鎶ヨ id: %d" %eventID)
         elif eventID == 10:
-            print '设备复位 id:', eventID
-            logger.info("设备复位，id: %d" %eventID)
+            print u'璁惧澶嶄綅 id:', eventID
+            logger.info(u"璁惧澶嶄綅 id: %d" %eventID)
         elif eventID == 11:
-            print '设备振铃 id:', eventID
-            logger.info("设备振铃，id: %d" %eventID)
+            print u'璁惧鎸搩 id:', eventID
+            logger.info(u"璁惧鎸搩 id: %d" %eventID)
         elif eventID == 12:
-            print '设备摘机 id:', eventID
-            logger.info("设备摘机，id: %d" %eventID)
+            print u'璁惧鎽樻満 id:', eventID
+            logger.info(u"璁惧鎽樻満 id: %d" %eventID)
         elif eventID == 13:
-            print '线路悬空 id:', eventID
-            logger.info("线路悬空，id: %d" %eventID)
+            print u'绾胯矾鎮┖ id:', eventID
+            logger.info(u"绾胯矾鎮┖ id: %d" %eventID)
         elif eventID == 15:
-            print '振铃取消 id:', eventID
-            logger.info("振铃取消，id: %d" %eventID)
+            print u'鎸搩鍙栨秷 id:', eventID
+            logger.info(u"鎸搩鍙栨秷 id: %d" %eventID)
         elif eventID == 21:
-            print '来电主叫 id:', eventID
-            logger.info("来电主叫，id: %d" %eventID)
+            print u'鏉ョ數鍙风爜 id:', eventID
+            logger.info(u"鏉ョ數鍙风爜 id: %d" %eventID)
             callid = cast(param1, c_char_p)
             print callid.value
-            logger.info("来电主叫，id: %d" %eventID)
+            logger.info(u"鏉ョ數鍙风爜id: %d" %eventID)
             self.broadcast(callid.value)
         elif eventID == 22:
-            print '按键事件 id:', eventID
+            print u'鎸夐敭浜嬩欢 id:', eventID
             print param1
-            logger.info("按键事件，id: %d" %eventID)
+            logger.info(u"鎸夐敭浜嬩欢 id: %d" %eventID)
         elif eventID == 30:
-            print '设备挂机 id:', eventID
-            logger.info("设备挂机，id: %d" %eventID)
+            print u'璁惧鎸傛満 id:', eventID
+            logger.info(u"璁惧鎸傛満id: %d" %eventID)
         elif eventID == 31:
-            print '设备停振 id:', eventID
-            logger.info("设备停振，id: %d" %eventID)
+            print u'璁惧鍋滄尟 id:', eventID
+            logger.info(u"璁惧鍋滄尟 id: %d" %eventID)
         else:
             print eventID
-            logger.info("其它事件，id: %d" %eventID)
+            logger.info(u"鍏跺畠浜嬩欢 id: %d" %eventID)
 
     def broadcast(self, message):
+        """ send message to all connected clients"""
         self.server.manager.broadcast(message)
 
 if __name__ == '__main__':
@@ -139,5 +138,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         prb.rbox.close_logfile()
         prb.rbox.close()
-#        rbox.closeUbox() 
-#        api.ubox_close()

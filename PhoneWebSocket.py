@@ -8,12 +8,10 @@ logger = logging.getLogger('PyRecordBox.PhoneWebSocket')
 class PhoneWebSocket(WebSocket):
 
     def opened(self):
-        logger.debug('a client connected')
+        logger.debug(u'客户端已连接')
 
     def received_message(self, message):
         logger.debug(message.data)
 
         self.send(message.data, message.is_binary)
-
-
 

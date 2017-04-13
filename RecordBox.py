@@ -6,8 +6,8 @@ from ctypes import *
 rbox = None 
 _rboxCallback = None
 
-logger = logging.getLogger('RecordBox')
-logger = logging.getLogger('PyRecordBox.PhoneWebSocket')
+logger = logging.getLogger('PyRecordBox.Recordbox')
+#logger = logging.getLogger('PyRecordBox.PhoneWebSocket')
 
 # callback function, call by recordbox dll.
 def rboxCallback(uboxHnd, eventID, param1, param2, param3, param4):
@@ -24,17 +24,19 @@ class RecordBox(object):
         return self.c_rboxCallback(callback_func)
 
     def open(self, callback_func):
-#        global _rboxCallback
 
         self.api.ubox_open.argtype = [self.c_rboxCallback, c_int]
         self.api.ubox_open.restype = c_int
        
+        # ubox_open, second parameter is loglevel,
+        # 0 --- log all message, 1-- log error and warning message only
+        # loglevel这个参数好象不起作用
         rt = self.api.ubox_open(callback_func, c_int(0))
         if rt:
-            logger.error('open recordbox fail. error no: %d' %rt)
+            logger.error(u'打开设备出错. 错误代码: %d' %rt)
             return False
         else:
-            logger.info('open recordbox success.')
+            logger.info(u'打开设备成功.')
 
     def close(self):
         self.api.ubox_close()
