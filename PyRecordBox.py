@@ -16,6 +16,7 @@ from RecordBox import RecordBox
 
 host = ''
 port = 0
+uboxlog = 0
 logger = logging.getLogger('PyRecordBox')
 rbox = None
 _rboxCallback = None
@@ -36,12 +37,13 @@ def configLogger():
     return logger
    
 def readConfig():
-    global host, port, logger
+    global host, port, logger, uboxlog
     config = ConfigParser.ConfigParser()
     config.read('PyRecordBox.ini')
     host = config.get('websocket', 'host')
     port = int(config.get('websocket', 'port'))
     level = config.get('log', 'level')
+    uboxlog = int(config.get('log','uboxlog'))
 
     if level == 'INFO':
         logger.setLevel(logging.INFO)
@@ -59,14 +61,17 @@ def readConfig():
 
 class PyRecordBox(object):
     def run(self):
-        global host, port , rbox
+        global host, port , rbox, uboxlog
         logger.info('PyRecordBox is running...')
         
         rbox = self
 
         self.rbox = RecordBox()
         _rboxCallback = self.rbox.makeCallback(rboxCallback)
-        self.rbox.open_logfile()
+
+        if uboxlog:
+            self.rbox.open_logfile()
+
         self.rbox.open(_rboxCallback)
 
         try:
@@ -136,5 +141,6 @@ if __name__ == '__main__':
         prb = PyRecordBox()
         prb.run()
     except KeyboardInterrupt:
-        prb.rbox.close_logfile()
+        if uboxlog:
+            prb.rbox.close_logfile()
         prb.rbox.close()
