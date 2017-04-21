@@ -2,7 +2,9 @@
 
 import sys, ctypes
 
-@ctypes.CFUNCTYPE(None, ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong) 
+
+#@ctypes.CFUNCTYPE(None, ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong) 
+@ctypes.WINFUNCTYPE(None, ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong) 
 def uboxCallback(uboxHnd, eventID, param1, param2, param3, param4):
     print uboxHnd, eventID
 
