@@ -90,7 +90,7 @@ class CallListBox(object):
             handler_class=WebSocketWSGIRequestHandler,
             app=WebSocketWSGIApplication(handler_cls=PhoneWebSocket))
         self.server.initialize_websockets_manager()
-#        self.server.serve_forever()
+
         self.svr_thread = threading.Thread(target=self.server.serve_forever)
         self.svr_thread.setDaemon(True)
         self.svr_thread.start()
