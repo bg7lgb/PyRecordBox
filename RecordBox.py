@@ -50,8 +50,20 @@ class RecordBox(object):
         self.api.ubox_close_logfile()
        
     def handleEvent(self, uboxHnd, eventID, param1, param2, param3, param4):
-        print eventID
+#        print eventID
         logger.info("eventID: %d" %eventID)
+
+    def dial(self, uboxHnd, phone_no):
+        """ 对传入的phone_no进行拨号，对于无软摘机功能的Fi3001B和Fi3002B，要手动摘机；
+        对于有软摘机功能的Fi31001A和Fi3102A，直接软件拨号，但上层程序需要软摘机，延时1-2秒，
+        再调用拨号 """
+        self.api.ubox_send_dtmf.argtype = [c_ulong, c_char_p]
+        self.api.ubox_send_dtmf.restype = c_int
+        rt = self.api.ubox_send_dtmf(uboxHnd, phone_no)
+        if rt:
+            logger.error(u'拨号失败 %s' %phone_no)
+        else:
+            logger.info(u'拨号成功 %s' %phone_no)
 
 if __name__ == "__main__":
     try:

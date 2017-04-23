@@ -1,5 +1,9 @@
 #-*-coding:utf-8 -*-
-
+"""
+    WinRecordBox.py -- PyRecordBox的GUI版本
+    1、提供来电显示，回拨功能。
+    2、来电号码可通过websocket向客户端广播，用于与应用系统集成，进行弹屏显示。
+"""
 try:
     import Tkinter as tk
     import tkFont
@@ -19,7 +23,6 @@ from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
 from PhoneWebSocket import PhoneWebSocket
 from RecordBox import RecordBox
-#from PyRecordBox import configLogger, readConfig, host, port
 
 host = ''
 port = 0
@@ -27,12 +30,10 @@ rbox = None
 _rboxCallback = None
 logger = logging.getLogger('PyRecordBox')
 
-#logger = logging.getLogger('PyRecordBox.Recordbox')
-#logger = logging.getLogger('PyRecordBox.PhoneWebSocket')
 
 # callback function, call by recordbox dll.
 def rboxCallback(uboxHnd, eventID, param1, param2, param3, param4):
-    logger.debug('rboxCallback called')
+#    logger.debug('rboxCallback called')
     if rbox:
         rbox.handleEvent(uboxHnd, eventID, param1, param2, param3, param4)
 
@@ -117,7 +118,7 @@ class CallListBox(object):
         container.grid_columnconfigure(0, weight=1)
         container.grid_rowconfigure(0, weight=1)
 
-        btnDial = ttk.Button(text=u"拨号")
+        btnDial = ttk.Button(text=u"拨号", command=self.dial)
         btnDial.grid(column = 0, row = 2, in_=container)
 
         self.statusBar = ttk.Label(text=u"", justify='left',relief='sunken') 
@@ -142,7 +143,15 @@ class CallListBox(object):
         self.server.manager.close_all()
         root.destroy()
 
+    def dial(self):
+        '''从下拉列表中选中一条记录进行拨号'''
+        index = self.tree.selection()
+        item = self.tree.item(index)
+        phone_no = str(item['values'][0])
+        self.rbox.dial(self.uboxHnd, phone_no)
+
     def handleEvent(self, uboxHnd, eventID, param1, param2, param3, param4):
+        self.uboxHnd = uboxHnd
         if eventID == 1:
             self.displayMessage(u'设备插入 id:%d' %eventID)
             logger.info(u"设备插入 id: %d" %eventID)
