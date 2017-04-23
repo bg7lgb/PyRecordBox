@@ -10,10 +10,19 @@ except ImportError:  # Python 3
     import tkinter.ttk as ttk
 
 import logging, time
+import threading, ConfigParser
+from logging.handlers import RotatingFileHandler
 from ctypes import *
-from RecordBox import RecordBox
-from PyRecordBox import configLogger, readConfig
+from wsgiref.simple_server import make_server
+from ws4py.server.wsgirefserver import WSGIServer, WebSocketWSGIRequestHandler
+from ws4py.server.wsgiutils import WebSocketWSGIApplication
 
+from PhoneWebSocket import PhoneWebSocket
+from RecordBox import RecordBox
+#from PyRecordBox import configLogger, readConfig, host, port
+
+host = ''
+port = 0
 rbox = None 
 _rboxCallback = None
 logger = logging.getLogger('PyRecordBox')
@@ -27,10 +36,41 @@ def rboxCallback(uboxHnd, eventID, param1, param2, param3, param4):
     if rbox:
         rbox.handleEvent(uboxHnd, eventID, param1, param2, param3, param4)
 
+def configLogger():
+    handler = RotatingFileHandler('PyRecordBox.log', maxBytes=10000000, backupCount = 5) 
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger = logging.getLogger('PyRecordBox')
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+
+    return logger
+   
+def readConfig():
+    global host, port, logger, uboxlog
+    config = ConfigParser.ConfigParser()
+    config.read('PyRecordBox.ini')
+    host = config.get('websocket', 'host')
+    port = int(config.get('websocket', 'port'))
+    level = config.get('log', 'level')
+    uboxlog = int(config.get('log','uboxlog'))
+
+    if level == 'INFO':
+        logger.setLevel(logging.INFO)
+    elif level == 'WARNING':
+        logger.setLevel(logging.WARNING)
+    elif level == 'DEBUG':
+        logger.setLevel(logging.DEBUG)
+    elif level == 'ERROR':
+        logger.setLevel(logging.ERROR)
+    elif level == 'CRITICAL':
+        logger.setLevel(logging.CRITICAL)
+    else:
+        logger.setLevel(logging.NOSET)
 
 class CallListBox(object):
     def __init__(self):
-        global rbox, _rboxCallback
+        global rbox, _rboxCallback, host, port
 
         self.tree = None
         self._setup_widgets()
@@ -42,6 +82,17 @@ class CallListBox(object):
         _rboxCallback = self.rbox.makeCallback(rboxCallback)
         self.rbox.open_logfile()
         self.rbox.open(_rboxCallback)
+
+        self.server = make_server(host, port, server_class=WSGIServer, 
+#        self.server = make_server('127.0.0.1', 9000, server_class=WSGIServer, 
+            handler_class=WebSocketWSGIRequestHandler,
+            app=WebSocketWSGIApplication(handler_cls=PhoneWebSocket))
+        self.server.initialize_websockets_manager()
+#        self.server.serve_forever()
+        self.svr_thread = threading.Thread(target=self.server.serve_forever)
+        self.svr_thread.setDaemon(True)
+        self.svr_thread.start()
+#        threading.Thread(target=self.server.serve_forever).start()
 
     def _setup_widgets(self):
         msg = ttk.Label(wraplength="4i", justify="left", anchor="n",
@@ -88,6 +139,7 @@ class CallListBox(object):
         global root
         self.rbox.close()
         self.rbox.close_logfile()
+        self.server.manager.close_all()
         root.destroy()
 
     def handleEvent(self, uboxHnd, eventID, param1, param2, param3, param4):
@@ -124,9 +176,7 @@ class CallListBox(object):
            
             # 振铃时，收到振铃取消事件后，清空当前呼叫记录和状态
             if self.status=='ringing':
-                self.call[0] = ''
-                self.call[1] = ''
-                self.call[2] = ''
+                self.call = ['','','']
                 self.status  = ''
 
         elif eventID == 21:
@@ -143,7 +193,7 @@ class CallListBox(object):
 
             self.displayMessage(u'来电号码 号码: %s' %callid.value)
             logger.info(u"来电号码 号码: %s" %callid.value)
-            #self.broadcast(callid.value)
+            self.server.manager.broadcast(self.call[0])
 
         elif eventID == 22:
             self.displayMessage(u'按键事件 id:%d' %eventID)
@@ -152,9 +202,7 @@ class CallListBox(object):
             self.displayMessage(u'设备挂机 id:%d' %eventID)
             logger.info(u"设备挂机id: %d" %eventID)
             #收到设备挂机事件，清空当前呼叫记录和状态
-            self.call[0] = ''
-            self.call[1] = ''
-            self.call[2] = ''
+            self.call = ['','','']
             self.status  = ''
         elif eventID == 31:
             self.displayMessage(u'设备停振 id:%d' %eventID)
@@ -178,4 +226,10 @@ if __name__ == '__main__':
     if rbox:
         root.protocol("WM_DELETE_WINDOW", rbox.quit)
     root.mainloop()
+
+#    server = make_server(host, port, server_class=WSGIServer, 
+#        handler_class=WebSocketWSGIRequestHandler,
+#        app=WebSocketWSGIApplication(handler_cls=PhoneWebSocket))
+#    server.initialize_websockets_manager()
+#    server.serve_forever()
 
