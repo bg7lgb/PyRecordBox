@@ -3,6 +3,7 @@
     WinRecordBox.py -- PyRecordBox的GUI版本
     1、提供来电显示，回拨功能。
     2、来电号码可通过websocket向客户端广播，用于与应用系统集成，进行弹屏显示。
+    author: bg7lgb@gmail.com
 """
 try:
     import Tkinter as tk
@@ -226,7 +227,7 @@ if __name__ == '__main__':
     readConfig()
 
     root = tk.Tk()
-    root.title(u"普罗米修斯来电管理程序")
+    root.title(u"来电管理程序")
     root.iconbitmap('call.ico')
     root.geometry("400x300")
 
