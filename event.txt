@@ -1,0 +1,53 @@
+event.txt 录音盒事件说明
+
+一、概述
+WinRecordBox与浏览器程序通过websocket进行通信，消息以json编码。
+
+客户端 --- WinRecordBox --- 录音盒
+
+1、WinRecordBox 将从录音盒接收到的事件，通过json编码后发送给客户端
+2、WinRecordBox 将从客户端接收到的命令，分析后，调用api对录音盒进行操作
+
+二、事件说明
+
+{'event':'事件名','phone_no':'电话号码'}
+
+event: plug_in
+设备插入
+
+event: plug_out
+设备拨出
+
+event: alarm
+设备报警
+
+event: reset
+设备复位
+
+event: ringing
+设备振铃
+
+event: offhook
+设备摘机
+
+event: dangling
+线路悬空，即设备未拉电话线
+
+event: ring_cancel
+振铃取消
+
+event: ring_stop
+设备停振
+
+event: caller_id   phone_no 来电号码
+来电号码，phone_no中存放来电的号码
+
+event: onhook
+设备挂机
+
+event: dtmf
+收到按键
+
+event: others
+其它事件
+
