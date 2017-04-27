@@ -19,7 +19,9 @@ class PhoneWebSocket(WebSocket):
         try:
             text = json.loads(message.data)
             if text['command'] =='dial':
-                self.app.dialout(text['phone_no'])
+                phone_no = str(text['phone_no'])
+                logger.debug(phone_no)
+                self.app.dialout(phone_no)
             else:
                 logger.debug(u'收到命令 %s' %text['command'])
         except ValueError:

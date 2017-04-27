@@ -155,7 +155,7 @@ class CallListBox(object):
 
     def dialout(self, phone_no):
         '''将phone_no从录音盒外呼'''
-        logger.info(u'拨号 %s' %phone_no)
+        logger.debug(u'拨号 %s' %phone_no)
         self.rbox.dial(self.uboxHnd, phone_no)
 
     def handleEvent(self, uboxHnd, eventID, param1, param2, param3, param4):
@@ -163,27 +163,27 @@ class CallListBox(object):
         message = {}
         if eventID == 1:
             self.displayMessage(u'设备插入 id:%d' %eventID)
-            logger.info(u"设备插入 id: %d" %eventID)
+            logger.debug(u"设备插入 id: %d" %eventID)
             message['event']='plug_in'
         elif eventID == 2:
             self.displayMessage(u'设备拨出 id:%d' %eventID)
-            logger.info(u"设备拨出 id: %d" %eventID)
+            logger.debug(u"设备拨出 id: %d" %eventID)
             message['event']='plug_out'
         elif eventID == 3:
             self.displayMessage(u'设备报警 id:%d' %eventID)
-            logger.info(u"设备报警 id: %d" %eventID)
+            logger.debug(u"设备报警 id: %d" %eventID)
             message['event']='alarm'
         elif eventID == 10:
             self.displayMessage(u'设备复位 id:%d' %eventID)
-            logger.info(u"设备复位 id: %d" %eventID)
+            logger.debug(u"设备复位 id: %d" %eventID)
             message['event']='reset'
         elif eventID == 11:
             self.displayMessage(u'设备振铃 id:%d' %eventID)
-            logger.info(u"设备振铃 id: %d" %eventID)
+            logger.debug(u"设备振铃 id: %d" %eventID)
             message['event']='ringing'
         elif eventID == 12:
             self.displayMessage(u'设备摘机 id:%d' %eventID)
-            logger.info(u"设备摘机 id: %d" %eventID)
+            logger.debug(u"设备摘机 id: %d" %eventID)
             message['event']='offhook'
 
             # 振铃时，收到摘机事件，表明已接听电话
@@ -193,11 +193,11 @@ class CallListBox(object):
                 self.tree.set(self.index, column=2, value=self.call[2])
         elif eventID == 13:
             self.displayMessage(u'线路悬空 id:%d' %eventID)
-            logger.info(u"线路悬空 id: %d" %eventID)
+            logger.debug(u"线路悬空 id: %d" %eventID)
             message['event']='dangling'
         elif eventID == 15:
             self.displayMessage(u'振铃取消 id:%d' %eventID)
-            logger.info(u"振铃取消 id: %d" %eventID)
+            logger.debug(u"振铃取消 id: %d" %eventID)
             message['event']='ring_cancel'
            
             # 振铃时，收到振铃取消事件后，清空当前呼叫记录和状态
@@ -207,7 +207,7 @@ class CallListBox(object):
 
         elif eventID == 21:
             self.displayMessage(u'来电号码 id:%d' %eventID)
-            logger.info(u"来电号码 id: %d" %eventID)
+            logger.debug(u"来电号码 id: %d" %eventID)
 
             callid = cast(param1, c_char_p)
             self.call[0] = callid.value
@@ -218,29 +218,29 @@ class CallListBox(object):
             self.index = self.tree.insert('', index=0, values=self.call)
 
             self.displayMessage(u'来电号码 号码: %s' %callid.value)
-            logger.info(u"来电号码 号码: %s" %callid.value)
+            logger.debug(u"来电号码 号码: %s" %callid.value)
             message['event']='caller_id'
             message['phone_no'] = self.call[0]
 #            self.server.manager.broadcast(self.call[0])
 
         elif eventID == 22:
             self.displayMessage(u'按键事件 id:%d' %eventID)
-            logger.info(u"按键事件 id: %d" %eventID)
+            logger.debug(u"按键事件 id: %d" %eventID)
             message['event']='dtmf'
         elif eventID == 30:
             self.displayMessage(u'设备挂机 id:%d' %eventID)
-            logger.info(u"设备挂机id: %d" %eventID)
+            logger.debug(u"设备挂机 id: %d" %eventID)
             message['event']='onhook'
             #收到设备挂机事件，清空当前呼叫记录和状态
             self.call = ['','','']
             self.status  = ''
         elif eventID == 31:
             self.displayMessage(u'设备停振 id:%d' %eventID)
-            logger.info(u"设备停振 id: %d" %eventID)
+            logger.debug(u"设备停振 id: %d" %eventID)
             message['event']='ring_stop'
         else:
             self.displayMessage(u'其它事件 id:%d' %eventID)
-            logger.info(u"其它事件 id: %d" %eventID)
+            logger.debug(u"其它事件 id: %d" %eventID)
             message['event']='others'
 
         json_text = json.dumps(message)
