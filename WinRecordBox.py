@@ -79,12 +79,21 @@ class CallListBox(object):
         self._setup_widgets()
         self._build_tree()
         
-        self.call = ['','','']
+        self.call = ['','','','']
+
+        # 第一条线路的handle，第二条线路的handle比它增加1
+        self.uboxHnd  = -1
 
         self.rbox = RecordBox()
         _rboxCallback = self.rbox.makeCallback(rboxCallback)
         self.rbox.open_logfile()
         self.rbox.open(_rboxCallback)
+
+        # 录音盒的线路
+        # line_no,也就是uboxHnd句柄，用来标识不同的线路
+        # 目前程序只能支持1路和2路的设备
+        self.lines = [{"uboxHnd":-1, "line_no":-1, "event":"", "call_id":"", "status":""}, 
+            {"uboxHnd":-1, "line_no":-1, "event":"", "call_id":""}]
 
         self.server = make_server(host, port, server_class=WSGIServer, 
 #        self.server = make_server('127.0.0.1', 9000, server_class=WSGIServer, 
@@ -104,7 +113,7 @@ class CallListBox(object):
         container = ttk.Frame()
         container.pack(fill='both', expand=True)
 
-        self.call_header = [u'电话号码', u'时间', u'状态']
+        self.call_header = [u'线路', u'电 话 号 码', u'来 电 时 间', u'状态']
 
         # create a treeview with dual scrollbars
         self.tree = ttk.Treeview(columns=self.call_header, show="headings")
@@ -149,98 +158,139 @@ class CallListBox(object):
         '''从下拉列表中选中一条记录进行拨号'''
         index = self.tree.selection()
         item = self.tree.item(index)
-        phone_no = str(item['values'][0])
-        self.dialout(phone_no)
+        line = item['values'][0]
+        phone_no = str(item['values'][1])
+        self.dialout(line, phone_no)
 #        self.rbox.dial(self.uboxHnd, phone_no)
 
-    def dialout(self, phone_no):
-        '''将phone_no从录音盒外呼'''
-        logger.debug(u'拨号 %s' %phone_no)
-        self.rbox.dial(self.uboxHnd, phone_no)
+    def dialout(self, line, phone_no):
+        '''将phone_no从录音盒的指定line外呼'''
+        logger.debug(u'线路 %d 拨号 %s' %(line, phone_no))
+#        self.rbox.dial(self.uboxHnd, phone_no)
+#        self.rbox.dial(line, phone_no)
+        self.rbox.dial(self.lines[line-1]["uboxHnd"], phone_no)
 
     def handleEvent(self, uboxHnd, eventID, param1, param2, param3, param4):
-        self.uboxHnd = uboxHnd
+#        self.uboxHnd = uboxHnd
         message = {}
         if eventID == 1:
-            self.displayMessage(u'设备插入 id:%d' %eventID)
-            logger.debug(u"设备插入 id: %d" %eventID)
+            #第一次收到事件，把第一条线路的handle保存起来
+            if self.uboxHnd == -1:
+                self.uboxHnd = uboxHnd
+            self.lines[uboxHnd - self.uboxHnd]["uboxHnd"] = uboxHnd
+            self.lines[uboxHnd - self.uboxHnd]["line_no"] = uboxHnd - self.uboxHnd + 1
+            self.lines[uboxHnd - self.uboxHnd]["call_id"] = ""
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "plug_in"
+            #print uboxHnd
+            #print self.lines
+            self.displayMessage(u'线路 %d 设备插入 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"],eventID))
+            logger.debug(u"线路 %d 设备插入 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='plug_in'
         elif eventID == 2:
-            self.displayMessage(u'设备拨出 id:%d' %eventID)
-            logger.debug(u"设备拨出 id: %d" %eventID)
+            if self.uboxHnd != -1:
+                self.uboxHnd = -1;
+            self.lines[uboxHnd - self.uboxHnd]["uboxHnd"] = -1
+            self.lines[uboxHnd - self.uboxHnd]["line_no"] = -1
+            self.lines[uboxHnd - self.uboxHnd]["call_id"] = ""
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "plug_out"
+            
+            self.displayMessage(u'线路 %d 设备拨出 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 设备拨出 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='plug_out'
         elif eventID == 3:
-            self.displayMessage(u'设备报警 id:%d' %eventID)
-            logger.debug(u"设备报警 id: %d" %eventID)
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "alarm"
+            self.displayMessage(u'线路 %d 设备报警 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 设备报警 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='alarm'
         elif eventID == 10:
-            self.displayMessage(u'设备复位 id:%d' %eventID)
-            logger.debug(u"设备复位 id: %d" %eventID)
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "reset"
+            self.displayMessage(u'线路 %d 设备复位 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 设备复位 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='reset'
         elif eventID == 11:
-            self.displayMessage(u'设备振铃 id:%d' %eventID)
-            logger.debug(u"设备振铃 id: %d" %eventID)
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "ringing"
+            self.displayMessage(u'线路 %d 设备振铃 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 设备振铃 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='ringing'
         elif eventID == 12:
-            self.displayMessage(u'设备摘机 id:%d' %eventID)
-            logger.debug(u"设备摘机 id: %d" %eventID)
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "offhook"
+            self.displayMessage(u'线路 %d 设备摘机 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 设备摘机 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='offhook'
 
             # 振铃时，收到摘机事件，表明已接听电话
-            if self.status == 'ringing':
-                self.call[2] = u'已接'
+            if self.lines[uboxHnd-self.uboxHnd]["status"] == "ringing":
+            #if self.status == 'ringing':
+                self.call[3] = u'已接'
                 # 修改来电状态为已接 
-                self.tree.set(self.index, column=2, value=self.call[2])
+                self.tree.set(self.index, column=3, value=self.call[3])
         elif eventID == 13:
-            self.displayMessage(u'线路悬空 id:%d' %eventID)
-            logger.debug(u"线路悬空 id: %d" %eventID)
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "dangling"
+            self.displayMessage(u'线路 %d 线路悬空 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 线路悬空 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='dangling'
         elif eventID == 15:
-            self.displayMessage(u'振铃取消 id:%d' %eventID)
-            logger.debug(u"振铃取消 id: %d" %eventID)
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "ring_cancel"
+            self.displayMessage(u'线路 %d 振铃取消 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 振铃取消 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='ring_cancel'
            
             # 振铃时，收到振铃取消事件后，清空当前呼叫记录和状态
-            if self.status=='ringing':
-                self.call = ['','','']
-                self.status  = ''
+            if self.lines[uboxHnd-self.uboxHnd]["status"] == "ringing":
+            #if self.status=='ringing':
+                self.call = ['','','','']
+                self.lines[uboxHnd-self.uboxHnd]["status"] = ""
+                #self.status  = ''
 
         elif eventID == 21:
-            self.displayMessage(u'来电号码 id:%d' %eventID)
-            logger.debug(u"来电号码 id: %d" %eventID)
+            self.displayMessage(u'线路 %d 来电 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 来电 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
 
             callid = cast(param1, c_char_p)
-            self.call[0] = callid.value
-            self.call[1] = time.strftime('%Y-%m-%d %H:%M')
-            self.call[2] = u'未接'
-            self.status  = 'ringing'
+            self.call[0] = self.lines[uboxHnd-self.uboxHnd]["line_no"]
+            self.call[1] = callid.value
+            self.call[2] = time.strftime('%Y-%m-%d %H:%M')
+            self.call[3] = u'未接'
+            #self.status  = 'ringing'
+            self.lines[uboxHnd - self.uboxHnd]["status"] = "ringing"
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "caller_id"
+            self.lines[uboxHnd - self.uboxHnd]["call_id"] = callid.value
+
             # 插入来电记录
             self.index = self.tree.insert('', index=0, values=self.call)
 
-            self.displayMessage(u'来电号码 号码: %s' %callid.value)
-            logger.debug(u"来电号码 号码: %s" %callid.value)
+            self.displayMessage(u'线路 %d 来电号码 %s' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], callid.value))
+            logger.debug(u"线路 %d 来电号码 %s" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], callid.value))
+
             message['event']='caller_id'
-            message['phone_no'] = self.call[0]
+            message['phone_no'] = self.call[1]
 #            self.server.manager.broadcast(self.call[0])
 
         elif eventID == 22:
-            self.displayMessage(u'按键事件 id:%d' %eventID)
-            logger.debug(u"按键事件 id: %d" %eventID)
+            self.displayMessage(u'线路 %d 按键事件 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 按键事件 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "dtmf"
             message['event']='dtmf'
+
         elif eventID == 30:
-            self.displayMessage(u'设备挂机 id:%d' %eventID)
-            logger.debug(u"设备挂机 id: %d" %eventID)
+            self.displayMessage(u'线路 %d 设备挂机 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 设备挂机 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='onhook'
             #收到设备挂机事件，清空当前呼叫记录和状态
-            self.call = ['','','']
-            self.status  = ''
+            self.call = ['', '','','']
+            self.lines[uboxHnd-self.uboxHnd]["status"] = ""
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "offhook"
+            self.lines[uboxHnd - self.uboxHnd]["call_id"] = "" 
+            #self.status  = ''
         elif eventID == 31:
-            self.displayMessage(u'设备停振 id:%d' %eventID)
-            logger.debug(u"设备停振 id: %d" %eventID)
+            self.displayMessage(u'线路 %d 设备停振 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 设备停振 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "ring_stop"
             message['event']='ring_stop'
         else:
-            self.displayMessage(u'其它事件 id:%d' %eventID)
-            logger.debug(u"其它事件 id: %d" %eventID)
+            self.displayMessage(u'线路 %d 其它事件 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug(u"线路 %d 其它事件 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.lines[uboxHnd - self.uboxHnd]["event"] = "others"
             message['event']='others'
 
         json_text = json.dumps(message)
