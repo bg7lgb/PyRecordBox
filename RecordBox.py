@@ -33,10 +33,10 @@ class RecordBox(object):
         # loglevel这个参数好象不起作用
         rt = self.api.ubox_open(callback_func, c_int(0))
         if rt:
-            logger.error(u'打开设备出错. 错误代码: %d' %rt)
+            logger.error('打开设备出错. 错误代码: %d' %rt)
             return False
         else:
-            logger.info(u'打开设备成功.')
+            logger.info('打开设备成功.')
 
     def close(self):
         self.api.ubox_close()
@@ -61,9 +61,9 @@ class RecordBox(object):
         self.api.ubox_send_dtmf.restype = c_int
         rt = self.api.ubox_send_dtmf(uboxHnd, phone_no)
         if rt:
-            logger.error(u'拨号失败 %s' %phone_no)
+            logger.error('拨号失败 %s' %phone_no)
         else:
-            logger.info(u'拨号成功 %s' %phone_no)
+            logger.info('拨号成功 %s' %phone_no)
 
 if __name__ == "__main__":
     try:
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         _rboxCallback = rbox.makeCallback(rboxCallback)
         rbox.open_logfile()
         rbox.open(_rboxCallback)
-        a = raw_input()
+        a = input()
     except KeyboardInterrupt:
         rbox.close()
         rbox.close_logfile()
