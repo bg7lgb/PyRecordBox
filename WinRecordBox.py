@@ -6,16 +6,16 @@
     author: bg7lgb@gmail.com
 """
 try:
-    import Tkinter as tk
-    import tkFont
-    import ttk
+    import tkinter as tk
+    import tkinter.font
+    import tkinter.ttk
 except ImportError:  # Python 3
     import tkinter as tk
     import tkinter.font as tkFont
     import tkinter.ttk as ttk
 
 import logging, time, json
-import threading, ConfigParser
+import threading, configparser
 from logging.handlers import RotatingFileHandler
 from ctypes import *
 from wsgiref.simple_server import make_server
@@ -51,7 +51,7 @@ def configLogger():
    
 def readConfig():
     global host, port, logger, uboxlog
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.read('PyRecordBox.ini')
     host = config.get('websocket', 'host')
     port = int(config.get('websocket', 'port'))
@@ -107,19 +107,19 @@ class CallListBox(object):
 #        threading.Thread(target=self.server.serve_forever).start()
 
     def _setup_widgets(self):
-        msg = ttk.Label(wraplength="4i", justify="left", anchor="n",
-            padding=(10, 2, 10, 6), text=u"来电记录")
+        msg = tkinter.ttk.Label(wraplength="4i", justify="left", anchor="n",
+            padding=(10, 2, 10, 6), text="来电记录")
         msg.pack(fill='x')
-        container = ttk.Frame()
+        container = tkinter.ttk.Frame()
         container.pack(fill='both', expand=True)
 
-        self.call_header = [u'线路', u'电 话 号 码', u'来 电 时 间', u'状态']
+        self.call_header = ['线路', '电 话 号 码', '来 电 时 间', '状态']
 
         # create a treeview with dual scrollbars
-        self.tree = ttk.Treeview(columns=self.call_header, show="headings")
-        vsb = ttk.Scrollbar(orient="vertical",
+        self.tree = tkinter.ttk.Treeview(columns=self.call_header, show="headings")
+        vsb = tkinter.ttk.Scrollbar(orient="vertical",
             command=self.tree.yview)
-        hsb = ttk.Scrollbar(orient="horizontal",
+        hsb = tkinter.ttk.Scrollbar(orient="horizontal",
             command=self.tree.xview)
         self.tree.configure(yscrollcommand=vsb.set,
             xscrollcommand=hsb.set)
@@ -129,10 +129,10 @@ class CallListBox(object):
         container.grid_columnconfigure(0, weight=1)
         container.grid_rowconfigure(0, weight=1)
 
-        btnDial = ttk.Button(text=u"拨号", command=self.dial)
+        btnDial = tkinter.ttk.Button(text="拨号", command=self.dial)
         btnDial.grid(column = 0, row = 2, in_=container)
 
-        self.statusBar = ttk.Label(text=u"", justify='left',relief='sunken') 
+        self.statusBar = tkinter.ttk.Label(text="", justify='left',relief='sunken') 
         self.statusBar.grid(column=0, row = 3, sticky='we', columnspan=2, in_=container)
 
 
@@ -142,7 +142,7 @@ class CallListBox(object):
                 command=lambda c=col: sortby(self.tree, c, 0))
             # adjust the column's width to the header string
             self.tree.column(col,
-                width=tkFont.Font().measure(col.title()))
+                width=tkinter.font.Font().measure(col.title()))
 
     def displayMessage(self, message):
         self.statusBar['text'] = message
@@ -165,7 +165,7 @@ class CallListBox(object):
 
     def dialout(self, line, phone_no):
         '''将phone_no从录音盒的指定line外呼'''
-        logger.debug(u'线路 %d 拨号 %s' %(line, phone_no))
+        logger.debug('线路 %d 拨号 %s' %(line, phone_no))
 #        self.rbox.dial(self.uboxHnd, phone_no)
 #        self.rbox.dial(line, phone_no)
         self.rbox.dial(self.lines[line-1]["uboxHnd"], phone_no)
@@ -183,8 +183,8 @@ class CallListBox(object):
             self.lines[uboxHnd - self.uboxHnd]["event"] = "plug_in"
             #print uboxHnd
             #print self.lines
-            self.displayMessage(u'线路 %d 设备插入 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"],eventID))
-            logger.debug(u"线路 %d 设备插入 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 设备插入 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"],eventID))
+            logger.debug("线路 %d 设备插入 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='plug_in'
         elif eventID == 2:
             if self.uboxHnd != -1:
@@ -194,45 +194,45 @@ class CallListBox(object):
             self.lines[uboxHnd - self.uboxHnd]["call_id"] = ""
             self.lines[uboxHnd - self.uboxHnd]["event"] = "plug_out"
             
-            self.displayMessage(u'线路 %d 设备拨出 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 设备拨出 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 设备拨出 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 设备拨出 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='plug_out'
         elif eventID == 3:
             self.lines[uboxHnd - self.uboxHnd]["event"] = "alarm"
-            self.displayMessage(u'线路 %d 设备报警 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 设备报警 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 设备报警 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 设备报警 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='alarm'
         elif eventID == 10:
             self.lines[uboxHnd - self.uboxHnd]["event"] = "reset"
-            self.displayMessage(u'线路 %d 设备复位 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 设备复位 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 设备复位 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 设备复位 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='reset'
         elif eventID == 11:
             self.lines[uboxHnd - self.uboxHnd]["event"] = "ringing"
-            self.displayMessage(u'线路 %d 设备振铃 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 设备振铃 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 设备振铃 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 设备振铃 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='ringing'
         elif eventID == 12:
             self.lines[uboxHnd - self.uboxHnd]["event"] = "offhook"
-            self.displayMessage(u'线路 %d 设备摘机 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 设备摘机 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 设备摘机 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 设备摘机 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='offhook'
 
             # 振铃时，收到摘机事件，表明已接听电话
             if self.lines[uboxHnd-self.uboxHnd]["status"] == "ringing":
             #if self.status == 'ringing':
-                self.call[3] = u'已接'
+                self.call[3] = '已接'
                 # 修改来电状态为已接 
                 self.tree.set(self.index, column=3, value=self.call[3])
         elif eventID == 13:
             self.lines[uboxHnd - self.uboxHnd]["event"] = "dangling"
-            self.displayMessage(u'线路 %d 线路悬空 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 线路悬空 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 线路悬空 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 线路悬空 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='dangling'
         elif eventID == 15:
             self.lines[uboxHnd - self.uboxHnd]["event"] = "ring_cancel"
-            self.displayMessage(u'线路 %d 振铃取消 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 振铃取消 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 振铃取消 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 振铃取消 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='ring_cancel'
            
             # 振铃时，收到振铃取消事件后，清空当前呼叫记录和状态
@@ -243,14 +243,14 @@ class CallListBox(object):
                 #self.status  = ''
 
         elif eventID == 21:
-            self.displayMessage(u'线路 %d 来电 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 来电 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 来电 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 来电 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
 
             callid = cast(param1, c_char_p)
             self.call[0] = self.lines[uboxHnd-self.uboxHnd]["line_no"]
             self.call[1] = callid.value
             self.call[2] = time.strftime('%Y-%m-%d %H:%M')
-            self.call[3] = u'未接'
+            self.call[3] = '未接'
             #self.status  = 'ringing'
             self.lines[uboxHnd - self.uboxHnd]["status"] = "ringing"
             self.lines[uboxHnd - self.uboxHnd]["event"] = "caller_id"
@@ -259,22 +259,22 @@ class CallListBox(object):
             # 插入来电记录
             self.index = self.tree.insert('', index=0, values=self.call)
 
-            self.displayMessage(u'线路 %d 来电号码 %s' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], callid.value))
-            logger.debug(u"线路 %d 来电号码 %s" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], callid.value))
+            self.displayMessage('线路 %d 来电号码 %s' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], callid.value))
+            logger.debug("线路 %d 来电号码 %s" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], callid.value))
 
             message['event']='caller_id'
             message['phone_no'] = self.call[1]
 #            self.server.manager.broadcast(self.call[0])
 
         elif eventID == 22:
-            self.displayMessage(u'线路 %d 按键事件 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 按键事件 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 按键事件 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 按键事件 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             self.lines[uboxHnd - self.uboxHnd]["event"] = "dtmf"
             message['event']='dtmf'
 
         elif eventID == 30:
-            self.displayMessage(u'线路 %d 设备挂机 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 设备挂机 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 设备挂机 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 设备挂机 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             message['event']='onhook'
             #收到设备挂机事件，清空当前呼叫记录和状态
             self.call = ['', '','','']
@@ -283,13 +283,13 @@ class CallListBox(object):
             self.lines[uboxHnd - self.uboxHnd]["call_id"] = "" 
             #self.status  = ''
         elif eventID == 31:
-            self.displayMessage(u'线路 %d 设备停振 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 设备停振 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 设备停振 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 设备停振 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             self.lines[uboxHnd - self.uboxHnd]["event"] = "ring_stop"
             message['event']='ring_stop'
         else:
-            self.displayMessage(u'线路 %d 其它事件 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
-            logger.debug(u"线路 %d 其它事件 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            self.displayMessage('线路 %d 其它事件 id:%d' %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
+            logger.debug("线路 %d 其它事件 id: %d" %(self.lines[uboxHnd-self.uboxHnd]["line_no"], eventID))
             self.lines[uboxHnd - self.uboxHnd]["event"] = "others"
             message['event']='others'
 
@@ -302,7 +302,7 @@ if __name__ == '__main__':
     readConfig()
 
     root = tk.Tk()
-    root.title(u"来电管理程序")
+    root.title("来电管理程序")
     root.iconbitmap('call.ico')
     root.geometry("400x300")
 

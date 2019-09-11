@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 
-from Tkinter import *           
+from tkinter import *           
 import sys, time
 
 class App():
@@ -9,7 +9,7 @@ class App():
         message = StringVar()
 
         # 已接电话 
-        Label(master, text = u"已接电话").grid(row=0,column=0)
+        Label(master, text = "已接电话").grid(row=0,column=0)
 
         lb_answered = Listbox(master)
         scr_answered = Scrollbar(master)
@@ -19,7 +19,7 @@ class App():
         scr_answered.grid(row=1, column=1, sticky=N+S )
 
         # 未接电话
-        Label(master, text = u"未接电话").grid(row=0,column=2)
+        Label(master, text = "未接电话").grid(row=0,column=2)
 
         lb_missed = Listbox(master)
         scr_missed = Scrollbar(master)
@@ -30,19 +30,19 @@ class App():
 
 
 
-        cb_call = Button(master, text =u"回拨", command = self.dial)
-        cb_exit = Button(master, text =u"退出", command = self.exit)
+        cb_call = Button(master, text ="回拨", command = self.dial)
+        cb_exit = Button(master, text ="退出", command = self.exit)
 
         cb_call.grid(row = 2, column=0, pady = 2)
         cb_exit.grid(row = 2, column=2, pady = 2)
 
-        statusbar = Label(master, text =u"录音机", border=1,anchor=W,\
+        statusbar = Label(master, text ="录音机", border=1,anchor=W,\
             relief=SUNKEN,textvariable=message)
         statusbar.grid(row = 3, columnspan=4, sticky=W+E)
 
 
     def dial(self):
-        print "dial"
+        print("dial")
 
     def exit(self):
         sys.exit(0)

@@ -10,7 +10,7 @@ pws_app = None
 class PhoneWebSocket(WebSocket):
 
     def opened(self):
-        logger.debug(u'客户端已连接')
+        logger.debug('客户端已连接')
         global pws_app
         self.setApp(pws_app)
 
@@ -23,7 +23,7 @@ class PhoneWebSocket(WebSocket):
                 logger.debug(phone_no)
                 self.app.dialout(phone_no)
             else:
-                logger.debug(u'收到命令 %s' %text['command'])
+                logger.debug('收到命令 %s' %text['command'])
         except ValueError:
             # 不是合法的json格式
             self.send(message.data, message.is_text)
